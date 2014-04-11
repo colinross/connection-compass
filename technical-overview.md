@@ -1,7 +1,7 @@
 = Proof of concept
 
 == Basic Architecture
-- Ruby 1.9, Rails 3
+- Ruby 1.9, Rails 3 -or- even just Sinatra
 - memcached/redis for transparent request caching
 - couchdb for persistance
 
