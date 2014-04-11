@@ -3,7 +3,7 @@
 == Basic Architecture
 - Ruby 1.9, Rails 3 -or- even just Sinatra
 - memcached/redis for transparent request caching
-- couchdb for persistance [Contacts, Members]
+- couchdb for persistance [Contacts, Members, Credentials]
 
 == Data Models
 - Contact : abstracted 'person', based on a Facebook 'Friend', Twitter 'Follower', LinkedIn 'Connection', etc.
