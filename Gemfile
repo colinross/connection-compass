@@ -3,6 +3,7 @@ source "https://rubygems.org"
 gem 'sinatra'
 gem 'sinatra-contrib'
 gem 'omniauth'
+gem 'omniauth-facebook'
 
 group :development, :test do
   gem 'pry'
