@@ -3,6 +3,6 @@ require 'rubygems'
 require 'bundler/setup'
 Bundler.setup
 
-require './app.rb'
+require './connection_compass.rb'
 
-run ConnectionCompass::App
+run ConnectionCompass
