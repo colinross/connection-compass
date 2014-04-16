@@ -1,0 +1,1 @@
+export PATH="/Users/cross/.rbenv/shims:/Users/cross/.rbenv/bin:$PATH"

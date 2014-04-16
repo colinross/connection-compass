@@ -1,5 +1,8 @@
+
 require 'rubygems'
-require File.join(File.dirname(__FILE__), 'app.rb')
-map "/" do
-  run ConnectionCompass::Main
-end
+require 'bundler/setup'
+Bundler.setup
+
+require './app.rb'
+
+run ConnectionCompass::App

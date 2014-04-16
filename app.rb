@@ -8,31 +8,41 @@ require 'omniauth-facebook'
 # require 'omniauth-twitter'
 
 module ConnectionCompass
-  class SinatraBaseApp < Sinatra::Base
+  class App < Sinatra::Base
     register Sinatra::Contrib
     register Sinatra::ConfigFile
 
     configure do
       config_file File.join(File.dirname(__FILE__),'config.yaml')
-
+      settings
       enable :sessions
-      set :session_secret, settings.app.session_secret
+      set :session_secret, settings.app["session_secret"]
       # set :views, File.join(File.dirname(__FILE__),'..','views','main')
       enable :inline_templates
     end
+    configure :production, :development do
+      enable :logging
+    end
 
-    FACEBOOK_REQUIRED_TOKEN_SCOPES = "basic_info,email,location"
+    configure :development do
+      require 'sinatra/reloader'
+      register Sinatra::Reloader
+    end
+
+    # FACEBOOK_REQUIRED_TOKEN_SCOPES = "basic_info,email,location"
 
     use OmniAuth::Builder do
       # provider :github, ENV['GITHUB_KEY'], ENV['GITHUB_SECRET']
-      provider :facebook, settings.facebook.api_key, settings.facebook.api_secret
+      provider :facebook, ConnectionCompass::App.settings.facebook["app_id"], ConnectionCompass::App.settings.facebook["app_secret"]
       # provider :twitter,  ENV['TWITTER_KEY'], ENV['TWITTER_SECRET']
     end
+
     get '/' do
       erb "
-      <a href='http://localhost:4567/auth/github'>Login with Github</a><br>
-      <a href='http://localhost:4567/auth/facebook'>Login with facebook</a><br>
-      <a href='http://localhost:4567/auth/twitter'>Login with twitter</a><br>
+      <a href='/auth/github'>Login with Github</a><br>
+      <a href='/auth/facebook'>Login with facebook</a><br>
+      <a href='/auth/twitter'>Login with twitter</a><br>
+      "
     end
     
     get '/auth/:provider/callback' do
@@ -59,11 +69,6 @@ module ConnectionCompass
       redirect '/'
     end
 
-    configure :development do
-      require 'sinatra/reloader'
-      register Sinatra::Reloader
-    end
-
   end
 end
 
@@ -71,18 +76,3 @@ end
 #   require file
 # end
 
-__END__
-
-@@ layout
-<html>
-  <head>
-    <link href='http://twitter.github.com/bootstrap/1.4.0/bootstrap.min.css' rel='stylesheet' />
-  </head>
-  <body>
-    <div class='container'>
-      <div class='content'>
-        <%= yield %>
-      </div>
-    </div>
-  </body>
-</html>
