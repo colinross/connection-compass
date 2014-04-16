@@ -1,28 +1,28 @@
 require 'rubygems'
+require 'pry'
 require 'sinatra/base'
 require 'sinatra/contrib'
 require 'json'
+
+require "sinatra/activerecord"
+
 require 'omniauth'
 # require 'omniauth-github'
 require 'omniauth-facebook'
 # require 'omniauth-twitter'
 
+
+
 module ConnectionCompass
   class App < Sinatra::Base
+    enable :logging
     register Sinatra::Contrib
-    register Sinatra::ConfigFile
-
-    configure do
-      config_file File.join(File.dirname(__FILE__),'config.yaml')
-      settings
-      enable :sessions
-      set :session_secret, settings.app["session_secret"]
-      # set :views, File.join(File.dirname(__FILE__),'..','views','main')
-      enable :inline_templates
-    end
-    configure :production, :development do
-      enable :logging
-    end
+    register Sinatra::ActiveRecordExtension
+    # register Sinatra::ConfigFile
+    config_file File.join(File.dirname(__FILE__),'config','settings.yml')
+    set :session_secret, settings.session_secret
+    enable :sessions
+    enable :inline_templates
 
     configure :development do
       require 'sinatra/reloader'
@@ -32,8 +32,10 @@ module ConnectionCompass
     # FACEBOOK_REQUIRED_TOKEN_SCOPES = "basic_info,email,location"
 
     use OmniAuth::Builder do
+      binding.pry
       # provider :github, ENV['GITHUB_KEY'], ENV['GITHUB_SECRET']
-      provider :facebook, ConnectionCompass::App.settings.facebook["app_id"], ConnectionCompass::App.settings.facebook["app_secret"]
+      provider :facebook, ConnectionCompass::App.settings.services[:facebook][:app_id], 
+                          ConnectionCompass::App.settings.services[:facebook][:app_secret]
       # provider :twitter,  ENV['TWITTER_KEY'], ENV['TWITTER_SECRET']
     end
 
@@ -71,8 +73,3 @@ module ConnectionCompass
 
   end
 end
-
-# Dir[File.join(File.dirname(__FILE__), 'app', '**/*.rb')].sort.each do |file|
-#   require file
-# end
-

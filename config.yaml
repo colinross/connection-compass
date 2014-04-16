@@ -1,8 +1,0 @@
-app:
-  session_secret: "d0bed4b0978bea7df69d1ccd0bed4b0978bea7df6"
-facebook:
-  app_id: "754336197924702"
-  app_secret: "9d1ccd0bed4b0978bea7df6b6b689481"
-twitter:
-  app_key: 
-  app_secret:
