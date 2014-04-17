@@ -1,4 +1,9 @@
 development:
+  database:
+    adapter: sqlite3
+    database: db/development.sqlite3
+    pool: 5
+    timeout: 5000
   session_secret: "d0bed4b0978bea7df69d1ccd0bed4b0978bea7df6"
   services:
     facebook:

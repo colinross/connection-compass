@@ -4,6 +4,7 @@ class CreateUsersAndIdentities < ActiveRecord::Migration
       t.string :name
       t.timestamps
     end
+    
     create_table :identities do |t|
       t.string :uid
       t.string :provider
