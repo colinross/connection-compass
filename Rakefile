@@ -1,5 +1,3 @@
+# this just happens to be blank at the moment.
 
-require 'active_record'
-require 'sinatra/activerecord/rake'
-
-require './connection_compass'
+#require './connection_compass'

@@ -4,8 +4,6 @@ require 'sinatra/base'
 require 'sinatra/contrib'
 require 'json'
 
-require "sinatra/activerecord"
-
 require 'omniauth'
 # require 'omniauth-github'
 require 'omniauth-facebook'
@@ -16,10 +14,9 @@ require 'omniauth-facebook'
 class ConnectionCompass < Sinatra::Base
   enable :logging
   register Sinatra::Contrib
-  register Sinatra::ActiveRecordExtension
   # register Sinatra::ConfigFile
   config_file File.join(File.dirname(__FILE__),'config','settings.yml')
-  ActiveRecord::Base.establish_connection(settings.database)
+
   set :session_secret, settings.session_secret
   enable :sessions
   enable :inline_templates

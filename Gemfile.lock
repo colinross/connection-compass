@@ -1,40 +1,13 @@
-GIT
-  remote: git://github.com/janko-m/sinatra-activerecord.git
-  revision: c0c328d47057d067a1cc7ad8bb76d353d91fb8e6
-  ref: c0c328d47057d067a1cc7ad8bb76d353d91fb8e6
-  specs:
-    sinatra-activerecord (2.0.0.rc)
-      activerecord (>= 3.2)
-      sinatra (~> 1.0)
-
 GEM
   remote: https://rubygems.org/
   specs:
-    activemodel (4.0.4)
-      activesupport (= 4.0.4)
-      builder (~> 3.1.0)
-    activerecord (4.0.4)
-      activemodel (= 4.0.4)
-      activerecord-deprecated_finders (~> 1.0.2)
-      activesupport (= 4.0.4)
-      arel (~> 4.0.0)
-    activerecord-deprecated_finders (1.0.3)
-    activesupport (4.0.4)
-      i18n (~> 0.6, >= 0.6.9)
-      minitest (~> 4.2)
-      multi_json (~> 1.3)
-      thread_safe (~> 0.1)
-      tzinfo (~> 0.3.37)
-    arel (4.0.2)
     backports (3.6.0)
-    builder (3.1.4)
     coderay (1.1.0)
     daemons (1.1.9)
     eventmachine (1.0.3)
     faraday (0.9.0)
       multipart-post (>= 1.2, < 3)
     hashie (2.1.1)
-    i18n (0.6.9)
     jwt (0.1.11)
       multi_json (>= 1.5)
     method_source (0.8.2)
@@ -67,7 +40,6 @@ GEM
       rack
     rack-test (0.6.2)
       rack (>= 1.0)
-    rake (10.3.0)
     sinatra (1.4.5)
       rack (~> 1.4)
       rack-protection (~> 1.4)
@@ -85,22 +57,17 @@ GEM
       daemons (>= 1.0.9)
       eventmachine (>= 1.0.0)
       rack (>= 1.0.0)
-    thread_safe (0.3.3)
     tilt (1.4.1)
-    tzinfo (0.3.39)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  activerecord (= 4.0.4)
-  minitest (~> 4.2)
+  minitest
   omniauth
   omniauth-facebook
   pry
-  rake
   sinatra
-  sinatra-activerecord!
   sinatra-contrib
   sqlite3
   thin
