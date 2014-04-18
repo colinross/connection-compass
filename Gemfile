@@ -11,16 +11,13 @@ gem "dm-sqlite-adapter"
 
 gem "moneta"
 
-gem "faraday" # already required from omniauth, but the Service class directly use it as well
+gem "faraday"
 
 group :development, :test do
   gem 'pry'
 end
 
-group :development do
-  gem 'thin'
-end
-
 group :test do
   gem 'minitest'
 end
+
