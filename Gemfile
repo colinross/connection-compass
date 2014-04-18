@@ -18,6 +18,7 @@ group :development, :test do
 end
 
 group :test do
+  gem 'vcr'
   gem 'minitest'
 end
 

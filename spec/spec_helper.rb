@@ -8,6 +8,15 @@ Bundler.setup
 # require test-specific stuff
 require 'rack/test'
 require 'pry'
+
+# VCR for fast, cached HTTP calls based on real responses
+require 'vcr'
+
+VCR.configure do |c|
+  c.cassette_library_dir = 'spec/fixtures/vcr_cassettes'
+  c.hook_into :faraday
+end
+
 # Misc patches as testing helpers
 class Hash
   def include_hash?(other)
