@@ -12,8 +12,13 @@ require 'omniauth-facebook'
 require "data_mapper"
 require "dm-sqlite-adapter"
 
+require 'rack/session/moneta'
+
 class ConnectionCompass < Sinatra::Base
   enable :logging
+  enable :inline_templates
+  set :session_secret, settings.session_secret
+
   configure :development do
     require 'sinatra/reloader'
     register Sinatra::Reloader
@@ -25,18 +30,16 @@ class ConnectionCompass < Sinatra::Base
   config_file File.join(File.dirname(__FILE__),'config','settings.yml')
 
   DataMapper.setup(:default, settings.database["database"])
-
-  set :session_secret, settings.session_secret
-  enable :sessions
-  enable :inline_templates
-
   # load models
   Dir[File.join(File.dirname(__FILE__), 'models', '**/*.rb')].sort.each do |file|
     require file
   end
   DataMapper.auto_upgrade!
   DataMapper.finalize
-  
+
+  # KISS: use the sqlite db for session store as well for proof-of-concept
+  use Rack::Session::Moneta,
+     store: Moneta.new(:DataMapper, setup: settings.database["database"])
 
   # FACEBOOK_REQUIRED_TOKEN_SCOPES = "basic_info,email,location"
 
@@ -64,7 +67,6 @@ class ConnectionCompass < Sinatra::Base
 
   get '/' do
     erb "
-    <a href='/auth/github'>Login with Github</a><br>
     <a href='/auth/facebook'>Login with facebook</a><br>
     <a href='/auth/twitter'>Login with twitter</a><br>
     "

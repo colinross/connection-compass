@@ -67,6 +67,7 @@ GEM
       multi_json (>= 1.5)
     method_source (0.8.2)
     minitest (4.7.5)
+    moneta (0.7.20)
     multi_json (1.9.2)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
@@ -122,6 +123,7 @@ DEPENDENCIES
   data_mapper
   dm-sqlite-adapter
   minitest
+  moneta
   omniauth
   omniauth-facebook
   pry

@@ -10,6 +10,9 @@ gem "data_mapper"
 gem "dm-sqlite-adapter"
 # gem "sqlite3"
 
+gem "moneta"
+
+
 group :development, :test do
   gem 'pry'
 end
