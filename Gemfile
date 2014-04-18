@@ -8,10 +8,10 @@ gem 'omniauth-facebook'
 
 gem "data_mapper"
 gem "dm-sqlite-adapter"
-# gem "sqlite3"
 
 gem "moneta"
 
+gem "faraday" # already required from omniauth, but the Service class directly use it as well
 
 group :development, :test do
   gem 'pry'
