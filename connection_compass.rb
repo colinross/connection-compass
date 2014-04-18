@@ -9,13 +9,22 @@ require 'omniauth'
 require 'omniauth-facebook'
 # require 'omniauth-twitter'
 
-
+require "data_mapper"
+require "dm-sqlite-adapter"
 
 class ConnectionCompass < Sinatra::Base
   enable :logging
+  configure :development do
+    require 'sinatra/reloader'
+    register Sinatra::Reloader
+    DataMapper::Logger.new($stdout, :debug)
+  end
+
   register Sinatra::Contrib
   # register Sinatra::ConfigFile
   config_file File.join(File.dirname(__FILE__),'config','settings.yml')
+
+  DataMapper.setup(:default, settings.database["database"])
 
   set :session_secret, settings.session_secret
   enable :sessions
@@ -25,11 +34,9 @@ class ConnectionCompass < Sinatra::Base
   Dir[File.join(File.dirname(__FILE__), 'models', '**/*.rb')].sort.each do |file|
     require file
   end
-
-  configure :development do
-    require 'sinatra/reloader'
-    register Sinatra::Reloader
-  end
+  DataMapper.auto_upgrade!
+  DataMapper.finalize
+  
 
   # FACEBOOK_REQUIRED_TOKEN_SCOPES = "basic_info,email,location"
 

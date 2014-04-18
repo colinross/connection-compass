@@ -6,7 +6,9 @@ gem 'sinatra-contrib'
 gem 'omniauth'
 gem 'omniauth-facebook'
 
-gem "sqlite3"
+gem "data_mapper"
+gem "dm-sqlite-adapter"
+# gem "sqlite3"
 
 group :development, :test do
   gem 'pry'
