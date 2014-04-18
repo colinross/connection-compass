@@ -7,6 +7,15 @@ Bundler.setup
 
 # require test-specific stuff
 require 'rack/test'
+require 'pry'
+# Misc patches as testing helpers
+class Hash
+  def include_hash?(other)
+    other.all? do |other_key_value|
+      any? { |own_key_value| own_key_value == other_key_value }
+    end
+  end
+end
 
 # test files should individually require the parts of the app they rely on.
 # Don't just Dir.glob the app here please.
