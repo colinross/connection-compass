@@ -1,8 +1,6 @@
 require_relative '../../spec_helper'
 require_relative '../../../lib/services/base'
 
-#include Rack::Test::Methods
-
 describe Services::Base do
   it "should accept faraday options (url, params, headers) in the initialize method, including blocks" do
     options = {url: "http://some-service-domain.tld/",

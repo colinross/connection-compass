@@ -9,7 +9,8 @@ development:
     facebook:
       app_id: "754336197924702"
       app_secret: "9d1ccd0bed4b0978bea7df6b6b689481"
-    twitter:
+      app_access_tokenn: "754336197924702|2MRBX58xoXD33FNmtmcsa_ZteyE"
+   twitter:
       app_key: 
       app_secret:
 test:

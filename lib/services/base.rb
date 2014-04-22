@@ -15,9 +15,10 @@ module Services
       raise '`url` must be set.' if url.empty?
       options = options.keep_if{|key,value| allowed_faraday_options.include?(key) && !value.nil? }
       @conn ||= ::Faraday.new(options) do |faraday|
-        faraday.request  :url_encoded             # form-encode POST params
-        faraday.response :logger                  # log requests to STDOUT
-        faraday.adapter  Faraday.default_adapter  # make requests with Net::HTTP
+        faraday.request  :url_encoded  # form-encode POST params
+        faraday.response :raise_error
+        faraday.adapter  Faraday.default_adapter
+        faraday.use VCR::Middleware::Faraday if ENV['env'] == "test"
       end
     end
 

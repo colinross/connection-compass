@@ -11,7 +11,7 @@ gem "dm-sqlite-adapter"
 
 gem "moneta"
 
-gem "faraday"
+gem "faraday", "0.8.9" #see: https://github.com/vcr/vcr/issues/386
 
 group :development, :test do
   gem 'pry'

@@ -15,6 +15,35 @@ require 'vcr'
 VCR.configure do |c|
   c.cassette_library_dir = 'spec/fixtures/vcr_cassettes'
   c.hook_into :faraday
+  c.default_cassette_options = { :record => :new_episodes }
+  c.ignore_request do |req|
+    URI(req.uri).path =~ /accounts\/test-users$/ if ENV['RESET_FACEBOOK_TOKENS']
+  end
+end
+
+# Get new access tokens for test users if ENV['RESET_FACEBOOK_TOKENS']
+if !ENV['RESET_FACEBOOK_TOKENS'].nil? || !defined?(FACEBOOK_ACCESS_TOKEN_FOR_TEST_USERS)
+  require 'json'
+  require_relative '../lib/services/facebook'
+  
+  client = ::Services::Base.new({url: "https://graph.facebook.com"})
+  VCR.use_cassette('facebook_test_users') do
+    request = client.get "/#{::Services::Facebook::APP_ID}/accounts/test-users" do |req|
+      req.params['access_token'] = ::Services::Facebook::APP_ACCESS_TOKEN
+    end
+    test_user_info = ::JSON::parse(request.body)
+
+    FACEBOOK_ACCESS_TOKEN_FOR_TEST_USERS = {}
+    test_user_info["data"].inject(FACEBOOK_ACCESS_TOKEN_FOR_TEST_USERS) do |results, test_user|
+      results[test_user["id"]] = test_user["access_token"] if test_user["access_token"]
+      results
+    end
+  end
+end
+
+# ugly i know
+def facebook_access_token_for_test_user
+  FACEBOOK_ACCESS_TOKEN_FOR_TEST_USERS.first.last
 end
 
 # Misc patches as testing helpers
