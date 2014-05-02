@@ -4,7 +4,9 @@
   </head>
   <body>
     <div class='container'>
+      <%= erb(:my_info, layout: false) unless current_user.nil? %>
       <div class='content'>
+        <%= styled_flash %>
         <%= yield %>
       </div>
     </div>

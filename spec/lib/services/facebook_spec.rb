@@ -12,8 +12,8 @@ describe Services::Facebook do
   end
   it "should be able to get a list of friends" do
     VCR.use_cassette('lib_services_facebook', :record => :new_episodes) do
-      friends = @fb_service.friends
-      binding.pry
+      friends = @fb_service._get_friends_json
     end
+    friends.must_be_type_of String
   end
 end
