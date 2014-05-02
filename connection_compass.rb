@@ -129,6 +129,12 @@ class ConnectionCompass < Sinatra::Base
     throw(:halt, [401, "Not authorized\n"]) unless signed_in?
     erb "<h3>Some protected page for User #{current_user.id}</h3><pre>#{request.env['omniauth.auth'].to_json}</pre><hr>
          <a href='/logout'>Logout</a>"
+  get '/friends' do
+    @fb_identity = Identity.first(user: current_user, provider: "facebook")
+    @fb_service = ::Services::Facebook.new(@fb_identity.access_token)
+    binding.pry
+    @friends_close_to_location = @fb_service.friends_close_to_location(session[:facebook_info]["location"].to_a[1..2].join(",")) 
+    erb :friends 
   end
   
   get '/logout' do

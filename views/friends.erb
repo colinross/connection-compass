@@ -1,0 +1,10 @@
+<% @friends_by_location.keys.each do |location| %>
+  <div style="width:300px;float:left;margin-right:10px;border:medium solid black;">
+    <h4><%= location || "Unknown" %></h4>
+    <ul>
+      <% @friends_close_to_location[location].each do |friend| %>
+        <li><%= friend['name'] %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
