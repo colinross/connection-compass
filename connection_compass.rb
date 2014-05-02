@@ -2,6 +2,7 @@ require 'rubygems'
 require 'pry'
 require 'sinatra/base'
 require 'sinatra/contrib'
+require 'sinatra/flash'
 require 'json'
 
 require 'omniauth'
@@ -14,9 +15,13 @@ require "dm-sqlite-adapter"
 
 require 'rack/session/moneta'
 
+Dir[File.dirname(__FILE__) + '/lib/**/*.rb'].each {|file| require file }
+
 class ConnectionCompass < Sinatra::Base
   enable :logging
   enable :inline_templates
+  enable :sessions
+  register Sinatra::Flash
   set :session_secret, settings.session_secret
 
   configure :development do
@@ -41,80 +46,55 @@ class ConnectionCompass < Sinatra::Base
   use Rack::Session::Moneta,
      store: Moneta.new(:DataMapper, setup: settings.database["database"])
 
-  # FACEBOOK_REQUIRED_TOKEN_SCOPES = "basic_info,email,location"
+  FACEBOOK_AUTH_SCOPE = "basic_info,user_location,friends_location"
+  FACEBOOK_INFO_FIELDS = "name,location,link,id,picture,timezone,third_party_id"
 
   use OmniAuth::Builder do
     # provider :github, ENV['GITHUB_KEY'], ENV['GITHUB_SECRET']
     provider :facebook, ConnectionCompass.settings.services["facebook"]["app_id"], 
-                        ConnectionCompass.settings.services["facebook"]["app_secret"]
+                        ConnectionCompass.settings.services["facebook"]["app_secret"],
+                        {scope: FACEBOOK_AUTH_SCOPE, info_fields: FACEBOOK_INFO_FIELDS,
+                         image_size: :normal, secure_image_url: true, }
     # provider :twitter,  ENV['TWITTER_KEY'], ENV['TWITTER_SECRET']
   end
 
   helpers do
     def current_user
-      @current_user ||= User.find_by(id: session[:user_id])
-    end
-
-    def signed_in?
-      !!current_user
-    end
-
-    def current_user=(user)
-      @current_user = user
-      session[:user_id] = user.nil? ? user : user.id
+      @current_user ||= User.first(id: session['user_id'])
     end
   end
 
   get '/' do
-    erb "
-    <a href='/auth/facebook'>Login with facebook</a><br>
-    <a href='/auth/twitter'>Login with twitter</a><br>
-    "
+    erb "<a href='/auth/facebook'>Login with facebook</a><br>"
   end
   
   get '/auth/:provider/callback' do
-      auth = request.env['omniauth.auth']
-      # Find an identity here
-      @identity = Identity.find_with_omniauth(auth)
+    auth = request.env['omniauth.auth']
+    # Hi security bug-- should really do this via a session hash => user association
+    # Next phase i should pull in warden to handle the logic
+    current_user ||= User.first(id: session['user_id'])
 
-      if @identity.nil?
-        # If no identity was found, create a brand new one here
-        @identity = Identity.create_with_omniauth(auth)
-      end
-
-      if signed_in?
-        if @identity.user == current_user
-          # User is signed in so they are trying to link an identity with their
-          # account. But we found the identity and the user associated with it 
-          # is the current user. So the identity is already associated with 
-          # this user. So let's display an error message.
-          # redirect_to root_url, notice: "Already linked that account!"
-          @notice = "Already linked that account!"
-        else
-          # The identity is not associated with the current_user so lets 
-          # associate the identity
-          # @identity.user = current_user
-          # @identity.save()
-          # redirect_to root_url, notice: "Successfully linked that account!"
-          @notice = "That is already linked to a different account!"
-        end
+    # Find an identity here
+    @identity = Identity.find_with_omniauth(auth)
+    if @identity.nil?
+      # If no identity was found, create a brand new one here
+      @identity = Identity.create_with_omniauth(auth)
+      unless current_user.nil?
+        # Adding a subsequent identity to a user
+        @identity.user = current_user
+        flash[:notice] = "Existing User: Successfully linked that account!"
       else
-        if @identity.user.present?
-          # The identity we found had a user associated with it so let's 
-          # just log them in here
-          current_user = @identity.user
-          #redirect_to root_url, notice: "Signed in!"
-          @notice = "Existing User: Successfully linked that account!"
-        else
-          # No user associated with the identity so we need to create a new one
-          # redirect_to new_user_url, notice: "Please finish registering"
-          @notice = "You are a new user and have linked that account!"
-        end
+        # new user
+        current_user = User.create(name: auth['info']['name'])
+        flash[:notice] = "You are a new user and have linked that account!"
       end
-
-    erb "<h1>#{params[:provider]}</h1>
-         <div>#{@notice}</div>
-         <pre>#{JSON.pretty_generate(request.env['omniauth.auth'])}</pre>"
+      @identity.user = current_user
+      @identity.save
+      current_user.profile = Profile.create_from_facebook_auth_info(auth['info'])
+      binding.pry
+    end
+    session[:user_id] = current_user.id
+    redirect '/friends'
   end
   
   get '/auth/failure' do
@@ -125,10 +105,11 @@ class ConnectionCompass < Sinatra::Base
     erb "#{params[:provider]} has deauthorized this app."
   end
   
-  get '/protected' do
+  get '/oauth_debug' do
     throw(:halt, [401, "Not authorized\n"]) unless signed_in?
-    erb "<h3>Some protected page for User #{current_user.id}</h3><pre>#{request.env['omniauth.auth'].to_json}</pre><hr>
-         <a href='/logout'>Logout</a>"
+    erb "<h3>Some protected page for User #{current_user.id}</h3><pre>#{request.env['omniauth.auth'].to_json}</pre>"
+  end
+
   get '/friends' do
     @fb_identity = Identity.first(user: current_user, provider: "facebook")
     @fb_service = ::Services::Facebook.new(@fb_identity.access_token)
@@ -138,7 +119,7 @@ class ConnectionCompass < Sinatra::Base
   end
   
   get '/logout' do
-    current_user = nil
+    session['user_id'] = current_user = nil
     redirect '/'
   end
 
