@@ -44,7 +44,7 @@ class ConnectionCompass < Sinatra::Base
   # register Sinatra::ConfigFile
   config_file File.join(File.dirname(__FILE__),'config','settings.yml')
 
-  DataMapper.setup(:default, settings.database["database"])
+  DataMapper.setup(:default, ENV['DATABASE_URL'] || settings.database["database"])
   # load models
   Dir[File.join(File.dirname(__FILE__), 'models', '**/*.rb')].sort.each do |file|
     require file

@@ -1,4 +1,5 @@
 source "https://rubygems.org"
+ruby "1.9.3"
 
 gem 'sinatra'
 gem 'sinatra-contrib'
@@ -8,7 +9,8 @@ gem 'omniauth'
 gem 'omniauth-facebook'
 
 gem "data_mapper"
-gem "dm-sqlite-adapter"
+gem 'dm-postgres-adapter', :group => :production
+gem 'dm-sqlite-adapter', :group => :development
 
 gem "moneta"
 

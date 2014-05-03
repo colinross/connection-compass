@@ -16,7 +16,6 @@ test:
     database: "sqlite3::memory:"
     pool: 5
     timeout: 5000
-# production:
 
 
 
