@@ -1,5 +1,14 @@
-require 'faraday'
 require 'forwardable'
+require 'faraday'
+require 'faraday-http-cache'
+
+# Have to freedom patch Moneta to match the ruby store convention of using read and write
+module Moneta
+  module Defaults
+    alias :read :[]
+    alias :write :[]=
+  end
+end
 
 # This class is not meant to be used directly, use the specific
 # service's implimentation instead, such as Services::Facebook
@@ -16,8 +25,10 @@ module Services
       options = options.keep_if{|key,value| allowed_faraday_options.include?(key) && !value.nil? }
       @conn ||= ::Faraday.new(options) do |faraday|
         faraday.request  :url_encoded  # form-encode POST params
-        faraday.response :raise_error
+        faraday.response :logger
         faraday.adapter  Faraday.default_adapter
+        #faraday.use :http_cache
+        faraday.use Faraday::HttpCache, store: Moneta.new(:DataMapper, setup: ConnectionCompass.settings.database["database"])
         faraday.use VCR::Middleware::Faraday if ENV['env'] == "test"
       end
     end

@@ -15,7 +15,8 @@ require "dm-sqlite-adapter"
 
 require 'rack/session/moneta'
 
-Dir[File.dirname(__FILE__) + '/lib/**/*.rb'].each {|file| require file }
+#Dir[File.dirname(__FILE__) + '/lib/**/*.rb'].each {|file| require file }
+require_relative 'lib/services/base'
 
 class ConnectionCompass < Sinatra::Base
   enable :logging
@@ -24,6 +25,11 @@ class ConnectionCompass < Sinatra::Base
   register Sinatra::Flash
   set :session_secret, settings.session_secret
 
+  configure do
+    file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
+    file.sync = true
+    use Rack::CommonLogger, file
+  end
   configure :development do
     require 'sinatra/reloader'
     register Sinatra::Reloader
@@ -65,6 +71,7 @@ class ConnectionCompass < Sinatra::Base
   end
 
   get '/' do
+    binding.pry
     erb "<a href='/auth/facebook'>Login with facebook</a><br>"
   end
   
