@@ -1,24 +1,7 @@
 require 'rubygems'
-if ENV["RACK_ENV"] == 'development'
-  require 'pry'
-  require 'pry/rescue'
-end
-require 'sinatra/base'
-require 'sinatra/contrib'
-require 'sinatra/flash'
-require 'json'
-
-require 'omniauth'
-# require 'omniauth-github'
-require 'omniauth-facebook'
-# require 'omniauth-twitter'
-
-require "data_mapper"
-require "dm-sqlite-adapter"
-
+require 'bundler/setup'
+Bundler.require(:default, ENV["RACK_ENV"].to_sym )
 require 'rack/session/moneta'
-
-require 'geokit'
 
 Dir[File.dirname(__FILE__) + '/lib/**/*.rb'].each {|file| require file }
 

@@ -1,6 +1,4 @@
 require_relative 'base'
-require 'moneta'
-require 'geokit'
 
 module Services
   # Usage: 

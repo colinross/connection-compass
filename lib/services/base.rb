@@ -1,6 +1,4 @@
 require 'forwardable'
-require 'faraday'
-require 'faraday-http-cache'
 
 # Have to freedom patch Moneta to match the ruby store convention of using read and write
 module Moneta
