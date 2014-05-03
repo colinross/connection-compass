@@ -1,6 +1,8 @@
 require 'rubygems'
-require 'pry'
-require 'pry/rescue'
+if ENV["RACK_ENV"] == 'development'
+  require 'pry'
+  require 'pry/rescue'
+end
 require 'sinatra/base'
 require 'sinatra/contrib'
 require 'sinatra/flash'
