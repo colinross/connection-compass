@@ -1,4 +1,6 @@
 require_relative 'base'
+require 'moneta'
+require 'geokit'
 
 module Services
   # Usage: 
@@ -20,18 +22,17 @@ module Services
       def _app_api_client
         @@app_api_client ||= new(APP_ACCESS_TOKEN)
       end
+      def fb_object_cache_store
+        @@fb_object_cache_store ||= Moneta.new(:DataMapper, setup: ConnectionCompass.settings.database["database"], table: :fb_object_cache)
+      end
       def verify_access_token!
         response = _app_api_client.get '/debug_token' do |req|
           req.params[:input_token] = access_token
         end
         ::JSON.parse(response.body)["data"]["is_valid"]
       end
-      def coordinates_for_location_id(location_id)
-        @@location_coordinates.fetch(location_id.to_s) || @@location_coordinates[location_id.to_s] = get_facebook_object_json(location_uuid)["location"]
-      end
-
-      def get_facebook_object_json(facebook_object_uuid)
-        @@FB_OBJ_LOOKUPS.fetch(facebook_object_uuid) || @@FB_OBJ_LOOKUPS[facebook_object_uuuid] = ::JSON.parse(_app_api_client.get("/#{facebook_object_uuid}/"))["data"]
+      def get_facebook_object(facebook_object_uuid)
+        fb_object_cache_store[facebook_object_uuid] ||= ::JSON.parse(_app_api_client.get("/#{facebook_object_uuid}/").body)
       end
     end
 
@@ -44,27 +45,28 @@ module Services
       super(conn_options)
     end
 
-   def friends
-      ::JSON.parse(_get_friends_json.body)["data"]
-    end
+    def friends_by_location(center = [], distance = 30)
+      @friends ||= ::JSON.parse(get("/me/friends?fields=third_party_id,location,name").body).try(:[], "data")
+      @friends_with_locations = @friends.reject {|f| f['location'].nil?}
+      @friends_unique_locations = @friends_with_locations.collect {|f| f['location']['id']}.uniq
+      
+      # this would be a good place to cache all location data for at least a couple days since location info is not specific to a user/friend.
+      @friends_location_info = @friends_unique_locations.inject({}) do |result, location_uuid|
+        result[location_uuid] = self.class.get_facebook_object(location_uuid)
+        result
+      end
 
-    def friends_close_to_location(center,radius = 50000)
-      friends_json = get("/me/friends?fields=third_party_id,location,name&center=#{center}&distance=#{radius}").body
-      ::JSON.parse(freinds_json)["data"] 
-      binding.pry
-
-      #locations = friends.collect {|f| f['location']}.unique
-
-      #friends_grouped_by_location = friends.group_by {|f| f['location'].try(:[], 'name')}
-      #locations = friends.grouped_by_location.keys
-      #locations_with_coordinates = locations.inject({}) do |result, location|
-      #  result[location.to_s] = coordinates_for_location_id
-      #end
-    end
-
-    protected
-    def _get_friends_json
-      get %{/me/friends?fields=third_party_id,location,name}
+      unless center.empty?
+        @center = Geokit::LatLng.new(*center)
+        @location_distance_from_center = @friends_location_info.inject({}) do |result, location|
+          loc_coords = Geokit::LatLng.new(*location.last['location'].values)
+          result[location.first] = @center.distance_to(loc_coords)
+          result
+        end
+        locations_in_range = @location_distance_from_center.reject {|location, distance_from_center| distance_from_center > distance}
+        @friends_in_range = @friends.keep_if {|friend| locations_in_range.include? friend.try(:[],'location').try(:[],'id')}
+      end
+      (@friends_in_range||@friends_with_locations).group_by {|friend| friend['location']['name'] }
     end
   end
 end

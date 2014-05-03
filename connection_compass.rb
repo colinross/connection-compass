@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'pry'
+require 'pry/rescue'
 require 'sinatra/base'
 require 'sinatra/contrib'
 require 'sinatra/flash'
@@ -15,8 +16,9 @@ require "dm-sqlite-adapter"
 
 require 'rack/session/moneta'
 
-#Dir[File.dirname(__FILE__) + '/lib/**/*.rb'].each {|file| require file }
-require_relative 'lib/services/base'
+require 'geokit'
+
+Dir[File.dirname(__FILE__) + '/lib/**/*.rb'].each {|file| require file }
 
 class ConnectionCompass < Sinatra::Base
   enable :logging
@@ -30,6 +32,8 @@ class ConnectionCompass < Sinatra::Base
     file.sync = true
     use Rack::CommonLogger, file
   end
+  use PryRescue::Rack if ENV["RACK_ENV"] == 'development'
+
   configure :development do
     require 'sinatra/reloader'
     register Sinatra::Reloader
@@ -53,7 +57,7 @@ class ConnectionCompass < Sinatra::Base
      store: Moneta.new(:DataMapper, setup: settings.database["database"])
 
   FACEBOOK_AUTH_SCOPE = "basic_info,user_location,friends_location"
-  FACEBOOK_INFO_FIELDS = "name,location,link,id,picture,timezone,third_party_id"
+  FACEBOOK_INFO_FIELDS = "name,location,link,third_party_id"
 
   use OmniAuth::Builder do
     # provider :github, ENV['GITHUB_KEY'], ENV['GITHUB_SECRET']
@@ -71,8 +75,11 @@ class ConnectionCompass < Sinatra::Base
   end
 
   get '/' do
-    binding.pry
-    erb "<a href='/auth/facebook'>Login with facebook</a><br>"
+    if current_user.nil?
+      erb "<a href='/auth/facebook'>Login with facebook</a><br>"
+    else
+      redirect '/friends'
+    end
   end
   
   get '/auth/:provider/callback' do
@@ -80,7 +87,7 @@ class ConnectionCompass < Sinatra::Base
     # Hi security bug-- should really do this via a session hash => user association
     # Next phase i should pull in warden to handle the logic
     current_user ||= User.first(id: session['user_id'])
-
+    session[:user_id] = current_user.id if !current_user.nil?
     # Find an identity here
     @identity = Identity.find_with_omniauth(auth)
     if @identity.nil?
@@ -92,15 +99,14 @@ class ConnectionCompass < Sinatra::Base
         flash[:notice] = "Existing User: Successfully linked that account!"
       else
         # new user
-        current_user = User.create(name: auth['info']['name'])
+        current_user = User.create
+        session[:user_id] = current_user.id
         flash[:notice] = "You are a new user and have linked that account!"
       end
       @identity.user = current_user
       @identity.save
-      current_user.profile = Profile.create_from_facebook_auth_info(auth['info'])
-      binding.pry
+      Profile.create_from_facebook_auth_info(current_user, auth)
     end
-    session[:user_id] = current_user.id
     redirect '/friends'
   end
   
@@ -111,17 +117,16 @@ class ConnectionCompass < Sinatra::Base
   get '/auth/:provider/deauthorized' do
     erb "#{params[:provider]} has deauthorized this app."
   end
-  
-  get '/oauth_debug' do
-    throw(:halt, [401, "Not authorized\n"]) unless signed_in?
-    erb "<h3>Some protected page for User #{current_user.id}</h3><pre>#{request.env['omniauth.auth'].to_json}</pre>"
-  end
 
   get '/friends' do
     @fb_identity = Identity.first(user: current_user, provider: "facebook")
     @fb_service = ::Services::Facebook.new(@fb_identity.access_token)
-    binding.pry
-    @friends_close_to_location = @fb_service.friends_close_to_location(session[:facebook_info]["location"].to_a[1..2].join(",")) 
+    unless params[:center_override].nil?
+      @center = Geokit::Geocoders::GoogleGeocoder.geocode(params[:center_override]).ll.split(",")
+    else
+      @center = [current_user.profile.location_lat,current_user.profile.location_long]
+    end
+    @friends =  @fb_service.friends_by_location(@center, 30) # miles
     erb :friends 
   end
   

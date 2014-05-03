@@ -2,7 +2,7 @@ class Profile
   include DataMapper::Resource
   
   property :id, Serial
-  
+  property :name, String
   property :location_lat, String
   property :location_long, String
   property :location_name, String
@@ -14,16 +14,11 @@ class Profile
 
   timestamps :at
 
-  before :create, :geolocate_location
-  before :update, :geolocate_location
-
-  def geolocate_location
-    location = ::Services::Facebook.coordinates_for_location_id ["location"]
-    self.coordinates_lat = location['latitude']
-    self.coordinates_long = location['longitude']
-  end
-
-  def self.create_from_facebook_auth_info(info)
-    create({location_lat:nil, location_long: nil, location_name: info['location'], profile_url: info['urls']['Facebook'], profile_image_url: info['image']})
+  def self.create_from_facebook_auth_info(user,info)
+    location = ::Services::Facebook.get_facebook_object(info['extra']['raw_info']['location']['id'])
+    profile = create({location_lat:location['location']['latitude'], location_long: location['location']['longitude'], location_name: location['name'],
+            profile_url: info['info']['urls']['Facebook'], profile_image_url: info['info']['image'],
+            name: info['info']['name'], user: user
+    })
   end
 end

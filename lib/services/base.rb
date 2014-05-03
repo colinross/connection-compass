@@ -27,7 +27,6 @@ module Services
         faraday.request  :url_encoded  # form-encode POST params
         faraday.response :logger
         faraday.adapter  Faraday.default_adapter
-        #faraday.use :http_cache
         faraday.use Faraday::HttpCache, store: Moneta.new(:DataMapper, setup: ConnectionCompass.settings.database["database"])
         faraday.use VCR::Middleware::Faraday if ENV['env'] == "test"
       end
@@ -45,6 +44,5 @@ module Services
     def allowed_faraday_options
       [:url,:params, :headers, :ssl]
     end
-
   end
 end
