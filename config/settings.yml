@@ -1,7 +1,15 @@
-session_secret: "d0bed4b0978bea7df69d1ccd0bed4b0978bea7df6"
-services:
-  facebook:
-    app_id: "754336197924702"
-    app_secret: "9d1ccd0bed4b0978bea7df6b6b689481"
-    app_access_tokenn: "754336197924702|2MRBX58xoXD33FNmtmcsa_ZteyE"
+development:
+  session_secret: "d0bed4b0978bea7df69d1ccd0bed4b0978bea7df6"
+  services:
+    facebook:
+      app_id: "763731566985165"
+      app_secret: "2ae28a780dffe8883d23f3feed7c614a"
+      app_access_token: "763731566985165|ImcfITJQrAGTgIQFx757YQLQGc0"
+production:
+  session_secret: "d0bed4b0978bea7df69d1ccd0bed4b0978bea7df6"
+  services:
+    facebook:
+      app_id: "754336197924702"
+      app_secret: "9d1ccd0bed4b0978bea7df6b6b689481"
+      app_access_token: "754336197924702|2MRBX58xoXD33FNmtmcsa_ZteyE"
 
