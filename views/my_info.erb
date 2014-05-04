@@ -1,7 +1,11 @@
-<div id="my_info">
-  <h3><img src="<%= current_user.profile.profile_image_url %>" /><a href="<%= current_user.profile.profile_url %>"><%= current_user.profile.name %></a></h3>
-  <p><%= current_user.profile.location_name %></p>
-  <form method="GET" action="#">
-    <label for="center_override">Override With:<input id="center_override" name="center_override" type="text" placeholder="San Francisco, Ca" /></label>
+<h3>
+  <img class="img-circle" src="<%= current_user.profile.profile_image_url %>" /> 
+  <a href="<%= current_user.profile.profile_url %>"><%= current_user.profile.name %></a> <small><%= current_user.profile.location_name %></small>
+</h3>
+  <form method="GET" action="#"i class="form-inline" role="form">
+    <div class="form-group">
+      <label for="center_override">Override City:</label> 
+      <input class="form-control" id="center_override" name="center_override" type="text" placeholder="San Francisco, Ca" />
+    </div>
+    <button type="submit" class="btn btn-default">Override!</button>
   </form>
-</div>

@@ -64,7 +64,7 @@ class ConnectionCompass < Sinatra::Base
 
   get '/' do
     if current_user.nil?
-      erb "<a href='/auth/facebook'>Login with facebook</a><br>"
+      erb %{<a class="center-block btn btn-lg btn-primary" href='/auth/facebook' role="button">Login with Facebook</a>}
     else
       redirect '/friends'
     end
