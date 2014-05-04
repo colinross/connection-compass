@@ -25,7 +25,7 @@ module Services
         faraday.request  :url_encoded  # form-encode POST params
         faraday.response :logger
         faraday.adapter  Faraday.default_adapter
-        faraday.use Faraday::HttpCache, store: Moneta.new(:DataMapper, setup: ConnectionCompass.settings.database["database"])
+        faraday.use Faraday::HttpCache, store: Moneta.new(:DataMapper, setup: ConnectionCompass::DATABASE_URL)
         faraday.use VCR::Middleware::Faraday if ENV['env'] == "test"
       end
     end

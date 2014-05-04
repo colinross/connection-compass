@@ -21,7 +21,7 @@ module Services
         @@app_api_client ||= new(APP_ACCESS_TOKEN)
       end
       def fb_object_cache_store
-        @@fb_object_cache_store ||= Moneta.new(:DataMapper, setup: ConnectionCompass.settings.database["database"], table: :fb_object_cache)
+        @@fb_object_cache_store ||= Moneta.new(:DataMapper, setup: ConnectionCompass::DATABASE_URL, table: :fb_object_cache)
       end
       def verify_access_token!
         response = _app_api_client.get '/debug_token' do |req|

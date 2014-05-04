@@ -7,6 +7,12 @@ Dir[File.dirname(__FILE__) + '/lib/**/*.rb'].each {|file| require file }
 
 class ConnectionCompass < Sinatra::Base
   enable :logging
+  
+  register Sinatra::Contrib
+  config_file File.join(File.dirname(__FILE__),'config','settings.yml')
+  DATABASE_URL = (ENV["RACK_ENV"] == "production") ? ENV['DATABASE_URL'] : settings.database["database"]
+  DataMapper.setup(:default, DATABASE_URL)
+  
   enable :inline_templates
   enable :sessions
   register Sinatra::Flash
@@ -29,11 +35,6 @@ class ConnectionCompass < Sinatra::Base
     DataMapper::Logger.new($stdout, :debug)
   end
 
-  register Sinatra::Contrib
-  # register Sinatra::ConfigFile
-  config_file File.join(File.dirname(__FILE__),'config','settings.yml')
-
-  DataMapper.setup(:default, ENV['DATABASE_URL'] || settings.database["database"])
   # load models
   Dir[File.join(File.dirname(__FILE__), 'models', '**/*.rb')].sort.each do |file|
     require file
@@ -43,7 +44,7 @@ class ConnectionCompass < Sinatra::Base
 
   # KISS: use the sqlite db for session store as well for proof-of-concept
   use Rack::Session::Moneta,
-     store: Moneta.new(:DataMapper, setup: settings.database["database"])
+     store: Moneta.new(:DataMapper, setup: DATABASE_URL)
 
   FACEBOOK_AUTH_SCOPE = "basic_info,user_location,friends_location"
   FACEBOOK_INFO_FIELDS = "name,location,link,third_party_id"
