@@ -13,7 +13,11 @@ class ConnectionCompass < Sinatra::Base
   set :session_secret, settings.session_secret
 
   configure do
-    file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
+    if ENV["RACK_ENV"] == 'production'
+      file = STDOUT
+    else
+      file = File.new("#{settings.root}/log/#{settings.environment}.log", 'a+')
+    end
     file.sync = true
     use Rack::CommonLogger, file
   end
