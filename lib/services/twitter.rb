@@ -1,3 +1,5 @@
+require_relative '../base'
+
 module Services
   class Twitter < Base
     def initialize(access_token)
