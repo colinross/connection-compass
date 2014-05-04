@@ -3,22 +3,26 @@ require 'bundler/setup'
 Bundler.require(:default, ENV["RACK_ENV"].to_sym )
 require 'rack/session/moneta'
 
+
 Dir[File.dirname(__FILE__) + '/lib/**/*.rb'].each {|file| require file }
 
 class ConnectionCompass < Sinatra::Base
-  enable :logging
-  
-  register Sinatra::Contrib
-  config_file File.join(File.dirname(__FILE__),'config','settings.yml')
-  DATABASE_URL = (ENV["RACK_ENV"] == "production") ? ENV['DATABASE_URL'] : settings.database["database"]
-  DataMapper.setup(:default, DATABASE_URL)
-  
-  enable :inline_templates
-  enable :sessions
-  register Sinatra::Flash
-  set :session_secret, settings.session_secret
+  configure :development do
+    require 'sinatra/reloader'
+    register Sinatra::Reloader
+  end
 
+  DATABASE_URL = ENV['DATABASE_URL'] ||  "sqlite3:db/development.sqlite3"
+  DataMapper.setup(:default, DATABASE_URL)
   configure do
+    enable :inline_templates
+    enable :sessions
+    register Sinatra::Flash
+    register Sinatra::Contrib
+    config_file File.join(File.dirname(__FILE__),'config','settings.yml')
+    set :session_secret, settings.session_secret
+
+    enable :logging
     if ENV["RACK_ENV"] == 'production'
       file = STDOUT
     else
@@ -26,14 +30,9 @@ class ConnectionCompass < Sinatra::Base
     end
     file.sync = true
     use Rack::CommonLogger, file
+    DataMapper::Logger.new($stdout, :error)
   end
   use PryRescue::Rack if ENV["RACK_ENV"] == 'development'
-
-  configure :development do
-    require 'sinatra/reloader'
-    register Sinatra::Reloader
-    DataMapper::Logger.new($stdout, :debug)
-  end
 
   # load models
   Dir[File.join(File.dirname(__FILE__), 'models', '**/*.rb')].sort.each do |file|
@@ -42,7 +41,6 @@ class ConnectionCompass < Sinatra::Base
   DataMapper.auto_upgrade!
   DataMapper.finalize
 
-  # KISS: use the sqlite db for session store as well for proof-of-concept
   use Rack::Session::Moneta,
      store: Moneta.new(:DataMapper, setup: DATABASE_URL)
 

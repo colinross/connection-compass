@@ -1,21 +1,7 @@
-development:
-  database:
-    adapter: sqlite3
-    database: "sqlite3:db/development.sqlite3"
-    pool: 5
-    timeout: 5000
-  session_secret: "d0bed4b0978bea7df69d1ccd0bed4b0978bea7df6"
-  services:
-    facebook:
-      app_id: "754336197924702"
-      app_secret: "9d1ccd0bed4b0978bea7df6b6b689481"
-      app_access_tokenn: "754336197924702|2MRBX58xoXD33FNmtmcsa_ZteyE"
-test:
-  database:
-    adapter: sqlite3
-    database: "sqlite3::memory:"
-    pool: 5
-    timeout: 5000
-
-
+session_secret: "d0bed4b0978bea7df69d1ccd0bed4b0978bea7df6"
+services:
+  facebook:
+    app_id: "754336197924702"
+    app_secret: "9d1ccd0bed4b0978bea7df6b6b689481"
+    app_access_tokenn: "754336197924702|2MRBX58xoXD33FNmtmcsa_ZteyE"
 
