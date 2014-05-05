@@ -44,7 +44,7 @@ class ConnectionCompass < Sinatra::Base
   use Rack::Session::Moneta,
      store: Moneta.new(:DataMapper, setup: DATABASE_URL)
 
-  FACEBOOK_AUTH_SCOPE = "basic_info,user_location,friends_location"
+  FACEBOOK_AUTH_SCOPE = "public_profile,user_friends,user_location,friends_location"
   FACEBOOK_INFO_FIELDS = "name,location,link,third_party_id"
 
   use OmniAuth::Builder do
@@ -74,6 +74,7 @@ class ConnectionCompass < Sinatra::Base
     auth = request.env['omniauth.auth']
     # Hi security bug-- should really do this via a session hash => user association
     # Next phase i should pull in warden to handle the logic
+    current_user shoul dget reset according to 
     current_user ||= User.first(id: session['user_id'])
     session[:user_id] = current_user.id if !current_user.nil?
     # Find an identity here
