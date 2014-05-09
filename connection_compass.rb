@@ -44,9 +44,9 @@ class ConnectionCompass < Sinatra::Base
   use Rack::Session::Moneta,
      store: Moneta.new(:DataMapper, setup: DATABASE_URL)
 
+  # Omniauth providers : links to Identities
   FACEBOOK_AUTH_SCOPE = "public_profile,user_friends,user_location,friends_location"
   FACEBOOK_INFO_FIELDS = "name,location,link,third_party_id"
-
   use OmniAuth::Builder do
     # provider :github, ENV['GITHUB_KEY'], ENV['GITHUB_SECRET']
     provider :facebook, ConnectionCompass.settings.services["facebook"]["app_id"], 
@@ -58,44 +58,37 @@ class ConnectionCompass < Sinatra::Base
 
   helpers do
     def current_user
-      @current_user ||= User.first(id: session['user_id'])
+      @current_user ||= User.first(id: session['user_id']) 
+    end
+    def current_user=(user)
+      @current_user = user
+    end
+    def current_user_is_valid?
+      !current_user.nil? && !current_user.identities.empty?
     end
   end
 
   get '/' do
-    if current_user.nil?
+    unless current_user_is_valid?
       erb %{<a class="center-block btn btn-lg btn-primary" href='/auth/facebook' role="button">Login with Facebook</a>}
     else
       redirect '/friends'
     end
   end
+
+  # Omniauth provides
+  # get '/auth/:provider' => processes auth with external service and hits '/auth/:provider/callback'
   
   get '/auth/:provider/callback' do
     auth = request.env['omniauth.auth']
-    # Hi security bug-- should really do this via a session hash => user association
-    # Next phase i should pull in warden to handle the logic
-    current_user shoul dget reset according to 
-    current_user ||= User.first(id: session['user_id'])
-    session[:user_id] = current_user.id if !current_user.nil?
-    # Find an identity here
-    @identity = Identity.find_with_omniauth(auth)
-    if @identity.nil?
-      # If no identity was found, create a brand new one here
-      @identity = Identity.create_with_omniauth(auth)
-      unless current_user.nil?
-        # Adding a subsequent identity to a user
-        @identity.user = current_user
-        flash[:notice] = "Existing User: Successfully linked that account!"
-      else
-        # new user
-        current_user = User.create
-        session[:user_id] = current_user.id
-        flash[:notice] = "You are a new user and have linked that account!"
-      end
-      @identity.user = current_user
-      @identity.save
-      Profile.create_from_facebook_auth_info(current_user, auth)
+    @identity = Identity.find_and_update_or_create_with_omniauth(auth, current_user || User.create)
+    if @identity.user.nil?
+      raise 'user not set or found' 
     end
+    @current_user = @identity.user
+    session[:user_id] = @current_user.try(:id)
+    
+    Profile.create_or_update_from_facebook_auth_info(current_user, auth)
     redirect '/friends'
   end
   

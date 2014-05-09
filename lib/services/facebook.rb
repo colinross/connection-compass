@@ -39,6 +39,7 @@ module Services
 
     def friends_by_location(center = [], distance = 30)
       @friends ||= ::JSON.parse(get("/me/friends?fields=third_party_id,location,name,link,picture").body).try(:[], "data")
+      binding.pry
       @friends_with_locations = @friends.reject {|f| f['location'].nil?}
       @friends_unique_locations = @friends_with_locations.collect {|f| f['location']['id']}.uniq
       

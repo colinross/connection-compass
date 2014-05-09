@@ -4,10 +4,15 @@ require 'rubygems'
 require 'bundler/setup'
 Bundler.setup
 
+require 'simplecov'
+SimpleCov.start
+SimpleCov.command_name 'spec'
 
 # require test-specific stuff
 require 'rack/test'
 require 'pry'
+
+require_relative '../connection_compass'
 
 # VCR for fast, cached HTTP calls based on real responses
 require 'vcr'
@@ -28,8 +33,8 @@ if !ENV['RESET_FACEBOOK_TOKENS'].nil? || !defined?(FACEBOOK_ACCESS_TOKEN_FOR_TES
   
   client = ::Services::Base.new({url: "https://graph.facebook.com"})
   VCR.use_cassette('facebook_test_users') do
-    request = client.get "/#{::Services::Facebook::APP_ID}/accounts/test-users" do |req|
-      req.params['access_token'] = ::Services::Facebook::APP_ACCESS_TOKEN
+    request = client.get "/#{ConnectionCompass.settings.services["facebook"]["app_id"]}/accounts/test-users" do |req|
+      req.params['access_token'] = ConnectionCompass.settings.services["facebook"]["app_access_token"]
     end
     test_user_info = ::JSON::parse(request.body)
 
@@ -54,10 +59,6 @@ class Hash
     end
   end
 end
-
-# test files should individually require the parts of the app they rely on.
-# Don't just Dir.glob the app here please.
-
 
 # This is the script that runs the full test suite. It is faster and
 # more effeciant than pulling in rake just to do this job.
