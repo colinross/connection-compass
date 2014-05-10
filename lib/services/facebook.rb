@@ -1,12 +1,14 @@
 require_relative 'base'
 
 module Services
-  # Usage: 
-  # fb_service = Services::Facebook.new(users_facebook_access_token)
   class Facebook < Base
+    class FacebookError < RuntimeError; end
+    class InvalidAuthToken < FacebookError; end
+    class ApplicationNotAuthorized < InvalidAuthToken; end
+    
     # Not directly needed now, but eventualy we should sign all our fb requests with the hash of these,
     # see https://developers.facebook.com/docs/graph-api/securing-requests/
-     
+
     attr_accessor :access_token
 
     # CLASS Methods
@@ -21,25 +23,37 @@ module Services
         response = _app_api_client.get '/debug_token' do |req|
           req.params[:input_token] = access_token
         end
-        ::JSON.parse(response.body)["data"]["is_valid"]
+        response.body["data"]["is_valid"]
       end
       def get_facebook_object(facebook_object_uuid)
-        fb_object_cache_store[facebook_object_uuid] ||= ::JSON.parse(_app_api_client.get("/#{facebook_object_uuid}/").body)
+        fb_object_cache_store[facebook_object_uuid] ||= _app_api_client.get("/#{facebook_object_uuid}/").body
       end
     end
 
     def initialize(given_access_token)
       access_token = given_access_token
       conn_options = {
-        url: "https://graph.facebook.com",  
+        url: "https://graph.facebook.com/",  
         params:  {access_token: access_token},
       }
       super(conn_options)
     end
+    def has_permission_to?(permission_key)
+      @permissions ||= get("/v1.0//me/permissions").body["data"]
+      found_permission = @permissions.find {|permission|  permission["permission"] == permission_key && permission["status"] == "granted" }
+      !found_permission.nil?
+    end
+    def handle_error_response(error)
+      case error["code"]
+      when 190
+        if error["error_subcode"] == 458
+          raise ApplicationNotAuthorized
+        end
+      end
+    end
 
     def friends_by_location(center = [], distance = 30)
-      @friends ||= ::JSON.parse(get("/me/friends?fields=third_party_id,location,name,link,picture").body).try(:[], "data")
-      binding.pry
+      @friends ||= get("/v1.0/me/friends?fields=third_party_id,location,name,link,picture").body["data"]
       @friends_with_locations = @friends.reject {|f| f['location'].nil?}
       @friends_unique_locations = @friends_with_locations.collect {|f| f['location']['id']}.uniq
       
@@ -61,6 +75,7 @@ module Services
       end
       (@friends_in_range||@friends_with_locations).group_by {|friend| friend['location']['name'] }
     end
+
   end
 end
 

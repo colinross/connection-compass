@@ -108,7 +108,12 @@ class ConnectionCompass < Sinatra::Base
     else
       @center = [current_user.profile.location_lat,current_user.profile.location_long]
     end
-    @friends =  @fb_service.friends_by_location(@center, 30) # miles
+    begin
+      @friends =  @fb_service.friends_by_location(@center, 30) # miles
+    rescue ::Services::Facebook::InvalidAuthToken => e
+      flash["error"] = "Invalid Access Token, please authneticate with Facebook."
+      redirect '/'
+    end
     erb :friends 
   end
   

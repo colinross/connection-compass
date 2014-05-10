@@ -17,6 +17,7 @@ gem "moneta"
 gem 'geokit'
 
 gem "faraday", "0.8.9" #see: https://github.com/vcr/vcr/issues/386
+gem 'faraday_middleware'
 gem 'faraday-http-cache'
 
 group :development, :test do

@@ -15,7 +15,6 @@ end
 module Services
   class Base
     extend Forwardable
-    def_delegators :conn, *::Faraday::Connection::METHODS.to_a
 
     attr_reader :conn
 
@@ -26,10 +25,22 @@ module Services
       @conn ||= ::Faraday.new(options) do |faraday|
         faraday.request  :url_encoded  # form-encode POST params
         faraday.response :logger
+        faraday.response :json, :content_type => /\bjson$/
         faraday.adapter  Faraday.default_adapter
+        faraday.use Faraday::Response::RaiseError # http://stackoverflow.com/questions/20844679/looking-for-example-of-faraday-middleware-with-error-checking
         faraday.use Faraday::HttpCache, store: Moneta.new(:DataMapper, setup: ConnectionCompass::DATABASE_URL)
         faraday.use VCR::Middleware::Faraday if ENV['env'] == "test"
       end
+    end
+
+    ::Faraday::Connection::METHODS.to_a.each do |method|
+      define_method(method) do |url| 
+        begin
+          conn.send(method.to_sym,url)
+        rescue Faraday::Error::ClientError => e
+          self.handle_error_response JSON.parse(e.response[:body])
+        end
+      end 
     end
 
     # For testing with mocks, just pass in a MiniTest::Mock
